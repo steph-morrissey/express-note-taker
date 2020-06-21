@@ -93,7 +93,7 @@ const deleteNote = async (req, res) => {
   parsedNote.map((note, index) => {
     note.id = `${index}`;
   });
-  console.log(parsedNote);
+
   // Writes transformed data to db.json
   await writeNotesToFile(parsedNote);
 

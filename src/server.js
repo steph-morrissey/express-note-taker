@@ -86,7 +86,7 @@ const deleteNote = async (req, res) => {
   const parsedNote = await getNotesFromFile();
 
   // Index in the array of note to be deleted
-  const startIndex = req.params.id - 1;
+  const startIndex = req.params.id;
   parsedNote.splice(startIndex, 1);
 
   // Re assigns ID property indexes from 0 for each object in array

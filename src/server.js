@@ -1,11 +1,13 @@
+// Required variables
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const { promisify } = require("util");
-const { parse } = require("path");
 
+// PORTS
 const PORT = process.env.PORT | 3060;
 
+// Express
 const app = express();
 
 // Promisify fs files
@@ -31,11 +33,18 @@ const serveNotesFile = (req, res) => {
 };
 
 // Reads the db.json file and returns the data
-const getNotesFromFile = async (req, res) => {
+const getNotesFromFile = async () => {
   const filePath = path.join(__dirname, "/db/db.json");
   const notesData = await readFileAsync(filePath, "utf8");
-  const notes = JSON.parse(notesData);
-  return notes;
+  const parsedNote = JSON.parse(notesData);
+  return parsedNote;
+};
+
+// Writes transformed notes array into db.json
+const writeNotesToFile = async (parsedNote) => {
+  const databaseFilePath = path.join(__dirname, "/db/db.json");
+  // Writes parsedNote array to db.json file
+  await writeFileAsync(databaseFilePath, JSON.stringify(parsedNote));
 };
 
 // Reads db.json file and returns saved notes
@@ -46,26 +55,25 @@ const getNotes = async (req, res) => {
 
 // Saves notes to db.json file
 const saveNotes = async (req, res) => {
-  const filePath = path.join(__dirname, "/view/notes.html");
-  const databaseFilePath = path.join(__dirname, "/db/db.json");
-  // Reads db.json file
-  const readNotes = await readFileAsync(databaseFilePath, "utf8");
   const newNoteData = req.body;
+  const filePath = path.join(__dirname, "/view/notes.html");
 
-  // Parses db file as a json object
-  const parsedNotes = JSON.parse(readNotes);
+  // Reads db.json file
+  const parsedNote = await getNotesFromFile();
+
   // Generates new ID for new note
-  const generateIndex = parsedNotes.length + 1;
+  const generateIndex = parsedNote.length + 1;
 
   // Adds note into the parsedNotes array
-  parsedNotes.push({
+  parsedNote.push({
     id: `${generateIndex}`,
     title: newNoteData.title,
     text: newNoteData.text,
   });
 
-  // Writes parsedNotes array to db.json file
-  await writeFileAsync(databaseFilePath, JSON.stringify(parsedNotes));
+  // Writes transformed data to db.json
+  await writeNotesToFile(parsedNote);
+
   // Sets success status and re renders page with updated notes
   res.status(200).sendFile(filePath);
 };
@@ -73,17 +81,17 @@ const saveNotes = async (req, res) => {
 // Deletes selected notes
 const deleteNote = async (req, res) => {
   const filePath = path.join(__dirname, "/view/notes.html");
-  const databaseFilePath = path.join(__dirname, "/db/db.json");
+
   // Reads db.json file
-  const readNotes = await readFileAsync(databaseFilePath, "utf8");
-  // Parses db file as a json object
-  const parsedNotes = JSON.parse(readNotes);
+  const parsedNote = await getNotesFromFile();
+
+  // Index in the array of note to be deleted
   const startIndex = req.params.id - 1;
+  parsedNote.splice(startIndex, 1);
 
-  parsedNotes.splice(startIndex, 1);
+  // Writes transformed data to db.json
+  await writeNotesToFile(parsedNote);
 
-  // Writes parsedNotes array to db.json file
-  await writeFileAsync(databaseFilePath, JSON.stringify(parsedNotes));
   // Sets success status and re renders page with updated notes
   res.status(200).sendFile(filePath);
 };

@@ -44,12 +44,6 @@ const getNotes = async (req, res) => {
   res.json(notes);
 };
 
-// Writes users input data into the db.json file
-//const writeNotesToFile = async (notes) => {
-//  const filePath = path.join(__dirname, "../../db/db.json");
-//  await writeFileAsync(filePath, JSON.stringify(notes));
-//};
-
 // Saves notes to db.json file
 const saveNotes = async (req, res) => {
   const filePath = path.join(__dirname, "/view/notes.html");
@@ -76,6 +70,24 @@ const saveNotes = async (req, res) => {
   res.status(200).sendFile(filePath);
 };
 
+// Deletes selected notes
+const deleteNote = async (req, res) => {
+  const filePath = path.join(__dirname, "/view/notes.html");
+  const databaseFilePath = path.join(__dirname, "/db/db.json");
+  // Reads db.json file
+  const readNotes = await readFileAsync(databaseFilePath, "utf8");
+  // Parses db file as a json object
+  const parsedNotes = JSON.parse(readNotes);
+  const startIndex = req.params.id - 1;
+
+  parsedNotes.splice(startIndex, 1);
+
+  // Writes parsedNotes array to db.json file
+  await writeFileAsync(databaseFilePath, JSON.stringify(parsedNotes));
+  // Sets success status and re renders page with updated notes
+  res.status(200).sendFile(filePath);
+};
+
 // Routes
 // HTML
 app.get("/", serveIndexFile);
@@ -83,6 +95,7 @@ app.get("/notes", serveNotesFile);
 // API
 app.get("/api/notes", getNotes);
 app.post("/api/notes", saveNotes);
+app.delete("/api/notes/:id", deleteNote);
 
 app.listen(PORT, () => {
   console.log(`Server listening on: http://localhost:${PORT}`);

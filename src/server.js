@@ -3,6 +3,7 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const { promisify } = require("util");
+const { Console } = require("console");
 
 // PORTS
 const PORT = process.env.PORT | 3060;
@@ -89,6 +90,11 @@ const deleteNote = async (req, res) => {
   const startIndex = req.params.id - 1;
   parsedNote.splice(startIndex, 1);
 
+  // Re assigns ID property indexes from 0 for each object in array
+  parsedNote.map((note, index) => {
+    note.id = `${index}`;
+  });
+  console.log(parsedNote);
   // Writes transformed data to db.json
   await writeNotesToFile(parsedNote);
 

@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const fs = require("fs");
 const { promisify } = require("util");
+const { parse } = require("path");
 
 const PORT = process.env.PORT | 3060;
 
@@ -50,9 +51,29 @@ const getNotes = async (req, res) => {
 //};
 
 // Saves notes to db.json file
-const saveNotes = (req, res) => {
-  const newNote = req.body;
-  console.log(req.body);
+const saveNotes = async (req, res) => {
+  const filePath = path.join(__dirname, "/view/notes.html");
+  const databaseFilePath = path.join(__dirname, "/db/db.json");
+  // Reads db.json file
+  const readNotes = await readFileAsync(databaseFilePath, "utf8");
+  const newNoteData = req.body;
+
+  // Parses db file as a json object
+  const parsedNotes = JSON.parse(readNotes);
+  // Generates new ID for new note
+  const generateIndex = parsedNotes.length + 1;
+
+  // Adds note into the parsedNotes array
+  parsedNotes.push({
+    id: `${generateIndex}`,
+    title: newNoteData.title,
+    text: newNoteData.text,
+  });
+
+  // Writes parsedNotes array to db.json file
+  await writeFileAsync(databaseFilePath, JSON.stringify(parsedNotes));
+  // Sets success status and re renders page with updated notes
+  res.status(200).sendFile(filePath);
 };
 
 // Routes

@@ -5,7 +5,7 @@ const fs = require("fs");
 const { promisify } = require("util");
 
 // PORTS
-const PORT = process.env.PORT | 3060;
+const PORT = process.env.PORT || 3001;
 
 // Express
 const app = express();
